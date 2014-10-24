@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <style type="text/css">
+      html { height: 100% }
+      body { height: 100%; margin: 0; padding: 0 }
+      #map_canvas { height: 100% }
+      
+	     #panel {
+	     position: absolute;
+	     top: 5px;
+	     left: 50%;
+	     margin-left: -180px;
+	     z-index: 5;
+	     background-color: #fff;
+	     padding: 5px;
+	     border: 1px solid #999;
+	   }
+    </style>
+    <script type="text/javascript"
+      src="http://maps.googleapis.com/maps/api/js?key=AIzaSyDDpenqcwPvcTJoyDR1WZEcOoJGT0BZE84&sensor=TRUE">
+    </script>
+    <script type="text/javascript">
+    var map;  
+    var markers=[];
+    /**
+     * The HomeControl adds a control to the map that
+     * returns the user to the control's defined home.
+     */
+
+    // Define a property to hold the Home state.
+    HomeControl.prototype.home_ = null;
+
+    // Define setters and getters for this property.
+    HomeControl.prototype.getHome = function() {
+      return this.home_;
+    };
+
+    HomeControl.prototype.setHome = function(home) {
+      this.home_ = home;
+    };
+
+    function HomeControl(map, div, home) {
+
+      // Get the control DIV. We'll attach our control UI to this DIV.
+      var controlDiv = div;
+
+      // We set up a variable for the 'this' keyword since we're adding event
+      // listeners later and 'this' will be out of scope.
+      var control = this;
+
+      // Set the home property upon construction.
+      control.home_ = home;
+
+      // Set CSS styles for the DIV containing the control. Setting padding to
+      // 5 px will offset the control from the edge of the map.
+      controlDiv.style.padding = '5px';
+
+      // Set CSS for the control border.
+      var goHomeUI = document.createElement('div');
+      goHomeUI.title = 'Click to set the map to Home';
+      controlDiv.appendChild(goHomeUI);
+
+      // Set CSS for the control interior.
+      var goHomeText = document.createElement('div');
+      goHomeText.innerHTML = '<strong>Home</strong>';
+      goHomeUI.appendChild(goHomeText);
+
+      // Set CSS for the setHome control border.
+      var setHomeUI = document.createElement('div');
+      setHomeUI.title = 'Click to set Home to the current center';
+      controlDiv.appendChild(setHomeUI);
+
+      // Set CSS for the control interior.
+      var setHomeText = document.createElement('div');
+      setHomeText.innerHTML = '<strong>Set Home</strong>';
+      setHomeUI.appendChild(setHomeText);
+
+      // Setup the click event listener for Home:
+      // simply set the map to the control's current home property.
+      google.maps.event.addDomListener(goHomeUI, 'click', function() {
+        var currentHome = control.getHome();
+        map.setCenter(currentHome);
+      });
+
+      // Setup the click event listener for Set Home:
+      // Set the control's home to the current Map center.
+      google.maps.event.addDomListener(setHomeUI, 'click', function() {
+        var newHome = map.getCenter();
+        control.setHome(newHome);
+      });
+    }
+  
+    function initialize() {
+    	  var contentString = '<div id="content">'+
+          '<div id="siteNotice">'+
+          '</div>'+
+          '<h1 id="firstHeading" class="firstHeading">Uluru</h1>'+
+          '<div id="bodyContent">'+
+          '<p><b>Uluru</b>, also referred to as <b>Ayers Rock</b>, is a large ' +
+          'sandstone rock formation in the southern part of the '+
+          'Northern Territory, central Australia. It lies 335&#160;km (208&#160;mi) '+
+          'south west of the nearest large town, Alice Springs; 450&#160;km '+
+          '(280&#160;mi) by road. Kata Tjuta and Uluru are the two major '+
+          'features of the Uluru - Kata Tjuta National Park. Uluru is '+
+          'sacred to the Pitjantjatjara and Yankunytjatjara, the '+
+          'Aboriginal people of the area. It has many springs, waterholes, '+
+          'rock caves and ancient paintings. Uluru is listed as a World '+
+          'Heritage Site.</p>'+
+          '<p>Attribution: Uluru, <a href="http://en.wikipedia.org/w/index.php?title=Uluru&oldid=297882194">'+
+          'http://en.wikipedia.org/w/index.php?title=Uluru</a> '+
+          '(last visited June 22, 2009).</p>'+
+          '</div>'+
+          '</div>';
+        var infoWindow = new google.maps.InfoWindow({
+        	content: contentString
+        });
+    	var myLatlng = new google.maps.LatLng(-25.363882,131.044922);		
+        var mapOptions = {
+          center: //new google.maps.LatLng(-34.397, 150.644),
+          myLatlng,
+          zoom: 12,
+          //mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+        map = new google.maps.Map(document.getElementById("map_canvas"),
+            mapOptions);
+        /*var marker = new google.maps.Marker({
+            position: map.getCenter(),
+            map: map,
+            title: 'Click to zoom'
+          });*/
+          
+        // Create the DIV to hold the control and call the HomeControl()
+        // constructor passing in this DIV.
+        var homeControlDiv = document.createElement('div');
+        var homeControl = new HomeControl(map, homeControlDiv, myLatlng);
+
+        homeControlDiv.index = 1;
+        map.controls[google.maps.ControlPosition.TOP_RIGHT].push(homeControlDiv);  
+          
+        google.maps.event.addListener(map, 'click', function(event) {
+      	    placeMarker(event.latLng);
+      	  });
+
+        /*google.maps.event.addListener(map, 'center_changed', function() {
+          // 3 seconds after the center of the map has changed, pan back to the
+          // marker.
+          window.setTimeout(function() {
+            map.panTo(marker.getPosition());
+          }, 3000);
+        });*/
+        function placeMarker(location) {
+        	var image='image/Technorati.png';
+        	var marker = new google.maps.Marker({
+        	      position: location,
+        	      map: map,
+        	      title:"Hello world",
+        	      animation: google.maps.Animation.DROP,
+        	      icon:image
+        	  });
+        markers.push(marker);
+        map.setCenter(location);
+        
+       	google.maps.event.addListener(marker,'click',function(){
+       		if(marker.getAnimation()!=null){
+       			marker.setAnimation(null);
+       		}
+       		else{
+       			marker.setAnimation(google.maps.Animation.BOUNCE);
+       		}
+       	});
+       	google.maps.event.addListener(marker,'click',function(){
+       		infoWindow.open(map,marker);
+       	});
+        /*google.maps.event.addListener(marker, 'click', function() {
+          map.setZoom(8);
+          map.setCenter(marker.getPosition());
+        });*/
+      }
+        
+      function setAllMap(map){
+    	  for(var i=0;i<markers.length;i++){
+    		  markers[i].setMap(map);
+    	  }
+      }
+      
+      function clearMarkers(){
+    	  setAllMap(null);
+      }
+      
+      function showMarkers(){
+    	  setAllMap(map);
+      }
+      
+      function deleteMarkers(){
+    	  clearMarkers();
+    	  markers=[];
+      }
+}
+    
+       
+     google.maps.event.addDomListener(window, 'load', initialize);
+    </script>
+  </head>
+  <body onload="initialize()">
+    <div id="map_canvas" style="width:100%; height:100%"></div>
+    <div id="panel">
+      <input onclick="clearMarkers();" type=button value="Hide Markers">
+      <input onclick="showMarkers();" type=button value="Show All Markers">
+      <input onclick="deleteMarkers();" type=button value="Delete Markers">
+    </div>
+  </body>
+</html>
