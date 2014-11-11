@@ -15,3 +15,9 @@ Add Login.jsp file into the Project, when enter http://arctic-defender-728.appsp
 
 Next Goal:
 Use Google+ API to add friends and chat with them on the Map!
+
+2014/11/11
+Add Client Location function to the app and try to locate the client's friends on the map. 
+
+Next Goal:
+Use the Client Location and build a Map-based Social Network
