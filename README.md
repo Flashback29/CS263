@@ -21,3 +21,9 @@ Add Client Location function to the app and try to locate the client's friends o
 
 Next Goal:
 Use the Client Location and build a Map-based Social Network
+
+2014/11/15
+Get friends' location, user info from the memcache and add longPolling to get user info repeatedly.
+
+Next Goal:
+Add a friend widget to see your friends' info
