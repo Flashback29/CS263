@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <style type="text/css">
+	      html,body,#map_canvas { height: 100%; margin: 0; padding: 0 }
+      
+	     #panel {
+	     position: absolute;
+	     top: 5px;
+	     left: 15%;
+	     margin-left: -180px;
+	     z-index: 5;
+	     background-color: #fff;
+	     padding: 5px;
+	     border: 1px solid #999;
+	   }
+    </style>
+    <script type="text/javascript" src="http://www.google.com/jsapi"></script>
+    <script type="text/javascript"
+      src="http://maps.googleapis.com/maps/api/js?signed_in=true&key=AIzaSyDDpenqcwPvcTJoyDR1WZEcOoJGT0BZE84&sensor=TRUE">
+    </script>
+    <script type="text/javascript" src="scripts/jquery-2.1.1.js"></script>    
+    <script type="text/javascript" src="scripts/jquery-2.1.1.min.js"></script>
+    <script type="text/javascript" src="scripts/jquery-ui.js"></script>
+    <script type="text/javascript" src="scripts/jquery.json-2.4.js"></script>
+    <script type="text/javascript" src="scripts/global.js"></script>    
+    <script type="text/javascript" src="scripts/filter.js"></script>
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css" />
+    
+  </head>
+  <body>
+    <div id="map_canvas"></div>
+    <div id="panel">
+      <label for="Show Alert">Show Alert</label>
+ 	  <input checked="checked" type="checkbox" id="checkBoxAlert" onclick="checkBoxAlert();">
+      <br/>
+      <label for="Show Msg">Show Msg</label>
+      <input checked="checked" type="checkbox" id="checkBoxMsg" onclick="checkBoxMsg();">
+      <br/>
+      <label for="Show Review">Show Review</label>
+      <input checked="checked" type="checkbox" id="checkBoxReview" onclick="checkBoxReview();">
+    </div>
+    
+    
+    
+<!--<div class="contextMenu" id="addMsg">
+    <ul>
+    	<li id="Message">Message</li>
+    	<li id="Alert">Alert</li>
+    	<li id="Suggestion">Suggestion</li>
+   	</ul>
+    </div>-->
+    
+    <div id="myForm">
+       <label for="Msg Title">Select Msg Type</label>
+      <br/>
+      <select id="type">
+				     	<option value="Alert">Alert</option>
+				     	<option value="Msg">Msg</option>
+				     	<option value="Review">Review</option>
+      </select>
+      <br/>
+      <label for="Msg Title">Msg Title</label>
+      <br/>
+      <input type="text" id="title" size="10">
+      <br/>
+      <label for="Msg Title">Msg Text</label>
+      <br/>
+      <textarea id="text" rows="5" cols="20" ></textarea>
+      <br/>
+      <button type="submit"></button>
+    </div>
+  </body>
+</html>
