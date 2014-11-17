@@ -27,3 +27,9 @@ Get friends' location, user info from the memcache and add longPolling to get us
 
 Next Goal:
 Add a friend widget to see your friends' info
+
+2014/11/16
+Add a friend Menu to check friends' info
+
+Next Goal:
+receive friends' info (chatting msg,location info etc.) to the friend Menu
