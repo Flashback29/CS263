@@ -16,6 +16,7 @@
 	     border: 1px solid #999;
 	   }
     </style>
+
     <script type="text/javascript" src="http://www.google.com/jsapi"></script>
     <script type="text/javascript"
       src="http://maps.googleapis.com/maps/api/js?signed_in=true&key=AIzaSyDDpenqcwPvcTJoyDR1WZEcOoJGT0BZE84&sensor=TRUE">
@@ -26,7 +27,9 @@
     <script type="text/javascript" src="scripts/jquery.json-2.4.js"></script>
     <script type="text/javascript" src="scripts/global.js"></script>    
     <script type="text/javascript" src="scripts/filter.js"></script>
+    <script type="text/javascript" src="scripts/jquery.sidebar.js"></script>
     <link rel="stylesheet" href="http://code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css" />
+    <link rel="stylesheet" type="text/css" href="/stylesheet/blue-glass/sidebar.css" />
     
   </head>
   <body>
@@ -41,16 +44,6 @@
       <label for="Show Review">Show Review</label>
       <input checked="checked" type="checkbox" id="checkBoxReview" onclick="checkBoxReview();">
     </div>
-    
-    
-    
-<!--<div class="contextMenu" id="addMsg">
-    <ul>
-    	<li id="Message">Message</li>
-    	<li id="Alert">Alert</li>
-    	<li id="Suggestion">Suggestion</li>
-   	</ul>
-    </div>-->
     
     <div id="myForm">
        <label for="Msg Title">Select Msg Type</label>
@@ -71,5 +64,9 @@
       <br/>
       <button type="submit"></button>
     </div>
+    
+		<ul id="friendMenu" >
+
+		</ul>
   </body>
 </html>

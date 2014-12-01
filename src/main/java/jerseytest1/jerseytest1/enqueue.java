@@ -123,12 +123,12 @@ public class enqueue {
 		return s;
 	}
 	
-	//@POST
-	@GET
+	@POST
+	//@GET
 	//@Produces(MediaType.APPLICATION_JSON)
 	@Path("/userinit/")
-	//@Consumes(MediaType.APPLICATION_JSON)
-	public String userInit( /*@PathParam("json")String str*/ /*String json*/){
+	@Consumes(MediaType.APPLICATION_JSON)
+	public String userInit( /*@PathParam("json")String str*/ String json){
 	    
 		MemcacheService syncCache = MemcacheServiceFactory.getMemcacheService();
 	    syncCache.setErrorHandler(ErrorHandlers.getConsistentLogAndContinue(Level.INFO));
@@ -136,26 +136,23 @@ public class enqueue {
 	  	UserService userService = UserServiceFactory.getUserService();
 	  	User user = userService.getCurrentUser();
 	  	
-	  	DatastoreService ds = DatastoreServiceFactory.getDatastoreService();
-	    
-	  	Msg msg = new Msg();
 		Gson gson = new Gson();	
 	  	
-		if(user!=null){
+		if(user!=null && json != null){
 			String s = "[";
-			String key;
 			
-			Query q = new Query("nickname");
-			PreparedQuery pq = ds.prepare(q);
+			MapUser[] users = gson.fromJson(json, MapUser[].class);
 			
-			for( Entity result : pq.asIterable() ){
-				key = result.getKey().getName();
-				String userObject = (String)syncCache.get(key);
-				if(userObject!=null){
-					s = s+userObject+",";
+			if(users!=null){
+				for(int i=0; i< users.length;i++){
+					String userObject = (String)syncCache.get(users[i].getNickName());
+					if(userObject!=null){
+						s = s+userObject+",";
+					}
 				}
+
+				s=s.substring(0, s.length()-1);
 			}
-			s=s.substring(0, s.length()-1);
 			s = s+"]";
 			return s;
 	  	}
@@ -181,23 +178,37 @@ public class enqueue {
 		Gson gson = new Gson();	
 		latlng latlng = gson.fromJson(json,latlng.class);
 	  	Key key = KeyFactory.createKey("nickname", user.getNickname());
-		String returnjson=json;
+	  	String s = "[";
+	  	String returnjson = "";
 	  	
-	  	if(user!=null){
-	  		try{
-	  			Entity e = ds.get(key);
-	  		}
-	  		catch(EntityNotFoundException e)	  		
-	  		{
-		  		Entity userEntity = new Entity("nickname",user.getNickname());
-		  		ds.put(userEntity);
-	  		}
-	  		
-	  		MapUser userMemc = new MapUser(latlng.getLat(),latlng.getLng(),user.getNickname());
-	  		syncCache.put(user.getNickname(), gson.toJson(userMemc));
-	  	}
-	  	else{
-	  		returnjson = "Please login your Google Account";
+	  	if(json!=null){
+		  	if(user!=null){
+		  		try{
+		  			Entity e = ds.get(key);
+					
+					Query q = new Query("nickname");
+					PreparedQuery pq = ds.prepare(q);
+					
+					for( Entity result : pq.asIterable() ){
+						s = s+ gson.toJson(new MapUser("","",result.getKey().getName()))+",";
+					}
+					s=s.substring(0, s.length()-1);
+					s = s+"]";
+					returnjson = s;
+		  		}
+		  		catch(EntityNotFoundException e)	  		
+		  		{
+			  		Entity userEntity = new Entity("nickname",user.getNickname());
+			  		//userEntity.setProperty("friends", gson.toJson(new MapUser("","",user.getNickname())));
+			  		ds.put(userEntity);
+		  		}
+		  		
+		  		MapUser userMemc = new MapUser(latlng.getLat(),latlng.getLng(),user.getNickname());
+		  		syncCache.put(user.getNickname(), gson.toJson(userMemc));
+		  	}
+		  	else{
+		  		returnjson = "Please login your Google Account";
+		  	}
 	  	}
 		return returnjson;
 	}
@@ -218,7 +229,7 @@ public class enqueue {
 	  	Msg msg = new Msg();
 		Gson gson = new Gson();	
 		
-	 	String signOutHref = userService.createLogoutURL("/map.html");
+	 	String signOutHref = userService.createLogoutURL("/login.jsp");
 	  	
 		if(user!=null){
 			if(syncCache.delete(user.getNickname())){

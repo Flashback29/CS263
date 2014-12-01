@@ -4,6 +4,7 @@
     var alertMarkers=[];
     var reviewMarkers=[];
     var userMarkers= [];
+    var friendsMarkers={};
     var latitude;
     var longitude ;
     var city ;
@@ -13,6 +14,9 @@
     var text; 
     var homeLatlng;
     var homeLatlngJSON;
+    var usersJSON;
+    var usersNicknameJSON;
+    var lastReceivedData;
     
     /**
      * The HomeControl adds a control to the map that
@@ -47,7 +51,7 @@
       // 5 px will offset the control from the edge of the map.
       controlDiv.style.padding = '5px';
 
-      // Set CSS for the control border.
+      // Client Location
       var goHomeUI = document.createElement('div');
       goHomeUI.title = 'Click to set the map to Your Location';
       controlDiv.appendChild(goHomeUI);
@@ -58,7 +62,7 @@
       goHomeUI.appendChild(goHomeText);
 
       
-      // Set CSS for the setHome control border.
+      // Client Logout
       var setHomeUI = document.createElement('div');
       setHomeUI.title = 'Click to login out';
       controlDiv.appendChild(setHomeUI);
@@ -67,6 +71,16 @@
       var setHomeText = document.createElement('div');
       setHomeText.innerHTML = '<strong>Login out</strong>';
       setHomeUI.appendChild(setHomeText);
+      
+      // Show Your Friends
+      var friendMenuUI = document.createElement('div');
+      friendMenuUI.title = 'Friends Menu';
+      controlDiv.appendChild(friendMenuUI);
+
+      // Set CSS for the control interior.
+      var friendMenuText = document.createElement('div');
+      friendMenuText.innerHTML = '<strong>People Nearby</strong>';
+      friendMenuUI.appendChild(friendMenuText);
 
       // Setup the click event listener for Home:
       // simply set the map to the control's current home property.
@@ -81,6 +95,23 @@
       google.maps.event.addDomListener(setHomeUI, 'click', function() {
         exit();
       });
+      
+      google.maps.event.addDomListener(friendMenuUI, 'click', function() {
+          //$("#menu").menu();
+    	  $("ul#friendMenu").sidebar({
+    		  position:"right",
+    		  callback:{
+	    		  item : {
+		    		  enter : function(){
+		    		  $(this).find("a").animate({color:"red"}, 250);
+		    		  },
+		    		  leave : function(){
+		    			  $(this).find("a").animate({color:"white"}, 250);
+		    		  }
+	    		  }
+    		  }
+    		  });
+        });
     }    
 /*
 function addMsg(event){
@@ -106,11 +137,11 @@ function geoInit() {
         homeLatlngJSON = {"lat":latitude,"lng":longitude};
         
         text = 'Your Location<br /><br />Latitude: ' + latitude + '<br />Longitude: ' + longitude + '<br />City: ' + city + '<br />Country: ' + country + '<br />Country Code: ' + country_code + '<br />Region: ' + region;
-        alert(text);	
+        //alert(text);	
     } else {
 
         text = 'Google was not able to detect your location';
-        alert(text);
+        //alert(text);
     }
     //document.write(text);
 }
@@ -123,7 +154,8 @@ function postUser(){
 		//data:str,
 		contentType: 'application/json; charset=UTF-8',
         success: function(data){
-        	alert("success"+data);
+        	//alert("success"+data);
+        	getUsers(data);
         },
         error: function(){
         	alert("Error Hell");
@@ -133,6 +165,7 @@ function postUser(){
 
 
 function initialize() {
+		 usersNicknameJSON = null;
 		 geoInit();
 		 postUser();
 		 
@@ -168,32 +201,26 @@ function initialize() {
         };
         map = new google.maps.Map(document.getElementById("map_canvas"),
             mapOptions);
-        placeMarker(homeLatlng,"User","","");
-        
-        /*var marker = new google.maps.Marker({
-            position: map.getCenter(),
-            map: map,
-            title: 'Click to zoom'
-          });*/
-          
-       
-
+        //placeMarker(homeLatlng,"User","","");
         
         // Create the DIV to hold the control and call the HomeControl()
         // constructor passing in this DIV.
         
         var homeControlDiv = document.createElement('div');
         var homeControl = new HomeControl(map, homeControlDiv, homeLatlng);
-        
+
     	$(function longPolling(){$.ajax({
-    		type:'GET',
+    		type:'POST',
     		url:'/context/jerseyws/userinit',
-    		//data:JSON.stringify(Msg),
+    		data:usersNicknameJSON,
     		//data:str,
-    		//contentType: 'application/json; charset=UTF-8',
+    		contentType: 'application/json; charset=UTF-8',
             success: function(data,textStatus){
-            	getUser(data);
-            	alert("success"+data);
+            	if(data!=null){
+            		usersJSON = data;
+            		getFriends(data);
+            	}
+            	//alert("success"+data);
             	
             	if (textStatus == "success") {
                     longPolling();
@@ -227,9 +254,9 @@ function initialize() {
         homeControlDiv.index = 1;
         map.controls[google.maps.ControlPosition.TOP_RIGHT].push(homeControlDiv);  
           
-        google.maps.event.addListener(map, 'click', function(event) {
-      	    placeMarker(event.latLng,"","","");
-      	  });
+        /*google.maps.event.addListener(map, 'click', function(event) {
+      	    placeMarker(event.latLng,"","","",null);
+      	  });*/
         
         google.maps.event.addListener(map,'rightclick',function(event){
         	var menu = document.getElementById("map_canvas");
@@ -278,7 +305,7 @@ function initialize() {
 	                            }
                         	});});
                         	
-                        	placeMarker(event.latLng,type,title,text);
+                        	placeMarker(event.latLng,type,title,text,null);
                         	
                         	$(this).dialog("close");
                         },
@@ -333,7 +360,7 @@ function initialize() {
             map.panTo(marker.getPosition());
           }, 3000);
         });*/
-        function placeMarker(location,type, title, text) {
+        function placeMarker(location,type, title, text,friend) {
 	        	switch(type){
 		        	case "Msg":var image='image/Technorati.png';break;
 		        	case "Alert":var image = 'image/Alert.png';break;
@@ -353,7 +380,7 @@ function initialize() {
 	        	case "Msg":msgMarkers.push(marker);alert(msgMarkers.length);break;
 	        	case "Alert":alertMarkers.push(marker);alert(alertMarkers.length);break;
 	        	case "Review":reviewMarkers.push(marker);alert(reviewMarkers.length);break;
-	        	case "User":userMarkers.push(marker);alert(userMarkers.length);break;
+	        	case "User":userMarkers.push(marker);alert(userMarkers.length);friendsMarkers[friend]=marker;break;
 	        	default:break;
         	}
 	        map.setCenter(location);
@@ -372,7 +399,7 @@ function initialize() {
         }
         
         function getData(receivedData){
-        	data = JSON.parse(receivedData);
+        	var data = JSON.parse(receivedData);
       	  for(var i=0;i<data.length;i++){
       		  var msg = data[i];
       		  var type = msg.type;
@@ -382,11 +409,65 @@ function initialize() {
       		  var text = msg.text;
       		  
       		  var latLng = new google.maps.LatLng(lat,lng);
-      		  placeMarker(latLng,type,title,text);
+      		  placeMarker(latLng,type,title,text,null);
       	  }
         }
-        function getUser(data){
+        function getFriends(receivedData){
+        	var data = JSON.parse(receivedData);
+        	//$("#friendMenu").empty();
+        	//var lastData = JSON.parse(lastReceivedData);
         	
+          	  for(var i=0;i<data.length;i++){
+          		  var friend = data[i];
+          		  //alert(friend.nickName);
+          		  
+          		  if(lastReceivedData!=null){
+        	  		  if(!isOnline(friend.nickName)){
+        				  var li = document.createElement("li");
+        				  li.id = friend.nickName;
+        				  li.innerHTML = friend.nickName;
+        				  li.style.color = "green";
+        				  li.onclick = findFriend(friend.nickName);
+        				  $("#friendMenu").append(li);
+        				  friendLatlng = new google.maps.LatLng(friend.lat,friend.lng);
+        				  placeMarker(friendLatlng,"User","","",friend.nickName);
+        	  		  }
+        	  		  checkOfflineFriends(receivedData);
+          		  }
+          		  else{
+          			  var li = document.createElement("li");
+        			  li.id = friend.nickName;
+        			  li.innerHTML = friend.nickName;
+        			  li.style.color = "green";
+        			  li.onclick = findFriend(friend.nickName);
+        			  $("#friendMenu").append(li);
+        			  friendLatlng = new google.maps.LatLng(friend.lat,friend.lng);
+    				  placeMarker(friendLatlng,"User","","",friend.nickName);
+          		  }
+          	  }
+          	  
+          	  lastReceivedData = receivedData;
+            }  
+        function  checkOfflineFriends(receivedData){
+        	var data = JSON.parse(receivedData);
+        	//$("#friendMenu").empty();
+        	var lastData = JSON.parse(lastReceivedData);
+        	var flag;
+        	
+        	for(var i =0 ;i<lastData.length;i++){
+        		flag = false;
+        		for(var j=0;j<data.length;j++){
+        			if(lastData[i].nickName==data[j].nickName){
+        				flag = true;
+        			}
+        		}
+        		if(flag == false){
+        			var li = document.getElementById(lastData[i].nickName);
+        			li.remove();
+        			friendsMarkers[lastData[i].nickName].setMap(null);
+        			//alert(friendsMarkers[lastData[i].nickName]);
+        		}
+        	}
         }
 }
         
@@ -408,7 +489,33 @@ function initialize() {
 	  clearMarkers();
 	  markers=[];
   }
+
   
+  function findFriend(nickname){
+	  
+  }
+  
+  function isOnline(nickname){
+	 	var lastData = JSON.parse(lastReceivedData);
+		var flag=false;
+		
+		for(var i =0 ;i<lastData.length;i++){
+			if(lastData[i].nickName == nickname){
+				flag = true;
+			}
+		}
+		return flag;
+  }
+  function getUsers(receivedData){
+  	var data = JSON.parse(receivedData);
+  	usersNicknameJSON = receivedData;
+  	
+	  for(var i=0;i<data.length;i++){
+		  var friend = data[i];
+		  //alert(friend.nickName);
+	  }
+  }
+
 function exit(){
 	var confirmExit = confirm("Are you sure to exit the app?");
 	
