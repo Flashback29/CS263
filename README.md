@@ -33,3 +33,9 @@ Add a friend Menu to check friends' info
 
 Next Goal:
 receive friends' info (chatting msg,location info etc.) to the friend Menu
+
+2014/11/30
+Successfully add multi-users login and real-time track other users' login status via the People Nearby Widget
+
+Next Goal:
+Use the XMPP API to chat with people nearby and use the blubstore API to upload the images
