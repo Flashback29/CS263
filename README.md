@@ -1,4 +1,7 @@
 CS263
+IMPORTANT:
+The APP url has been changed to : pure-league-728.appspot.com/login.jsp
+
 =====
 
 2014/10/24
@@ -40,3 +43,5 @@ Next Goal: Use the XMPP API to chat with people nearby and use the blobstore API
 
 2014/12/16
 Successfully apply chatting system in the APP. Users could chat with others nearby and could blobstore and imageservice API to upload the user logo in the google map based social network.
+
+The APP url has been changed to : pure-league-728.appspot.com/login.jsp
