@@ -1,69 +1,92 @@
+/**
+ * check Alert box for the filter options
+ */
 function checkBoxAlert(){
 	if($('#checkBoxAlert').is(':checked')==false){
-		//hideAlert();
-		//alert(alertMarkers.length);
 		  for(var i=0;i<alertMarkers.length;i++){
-			  //alert(i);
 			  alertMarkers[i].setMap(null);
 		  }
-		
-//		alert("alert test");
 	}
 	else{
 		showAlert(map);
 	}
 }
 
+/**
+ * check Msg box for the filter options
+ */
 function checkBoxMsg(){
-	//alert("alert test");
 	if($('#checkBoxMsg').is(':checked')==false){
 		hideMsg();
-		//alert("msg test");
 	}
 	else{
 		showMsg(map);
 	}
 }
+
+/**
+ * check Review box for the filter options
+ */
 function checkBoxReview(){
-	//alert("alert test");
 	if($('#checkBoxReview').is(':checked')==false){
 		hideReview();
-		//alert("review test");
 	}
 	else{
 		showReview(map);
 	}
 }
     	
+/**
+ * hide the alert markers
+ */
 function hideAlert(){
-	//alert("alert test");
 	  for(var i=0;i<alertMarkers.length;i++){
-		  //alert(i);
 		  alertMarkers[i].setMap(null);
 	  }
 }
+
+/**
+ * show alert markers
+ * @param map
+ */
 function showAlert(map){
 	  for(var i=0;i<alertMarkers.length;i++){
 		  alertMarkers[i].setMap(map);
 	  }
 }  
 
+/**
+ * hide the msg markers
+ */
 function hideMsg(){
 	  for(var i=0;i<msgMarkers.length;i++){
 		  msgMarkers[i].setMap(null);
 	  }
 }
+
+/**
+ * show the alert markers
+ */
 function showMsg(){
 	  for(var i=0;i<msgMarkers.length;i++){
 		  msgMarkers[i].setMap(map);
 	  }
 }
     	
+
+/**
+ * hide the review markers
+ */
 function hideReview(){
 	  for(var i=0;i<reviewMarkers.length;i++){
 		  reviewMarkers[i].setMap(null);
 	  }
 }
+
+/**
+ * show the review markers
+ * @param map
+ */
 function showReview(map){
 	  for(var i=0;i<reviewMarkers.length;i++){
 		  reviewMarkers[i].setMap(map);

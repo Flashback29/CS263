@@ -1,4 +1,7 @@
-    var map;  
+/**
+ * global variables that will be used in the system
+ */
+	var map;  
     var markers=[];
     var msgMarkers=[];
     var alertMarkers=[];
@@ -27,20 +30,6 @@
      * The HomeControl adds a control to the map that
      * returns the user to the control's defined home.
      */
-    /*
-    // Define a property to hold the Home state.
-    HomeControl.prototype.home_ = null;
-
-    // Define setters and getters for this property.
-    HomeControl.prototype.getHome = function() {
-      return this.home_;
-    };
-
-    HomeControl.prototype.setHome = function(home) {
-      this.home_ = home;
-    };
-    */
-
     function HomeControl(map, div) {
 
       // Get the control DIV. We'll attach our control UI to this DIV.
@@ -105,17 +94,17 @@
         map.setCenter(homeLatlng);
       });
            
-      //Set account logo button
+      //Setup click event listener for setting account logo
       google.maps.event.addDomListener(logoUI, 'click', function() {
           setLogo();
       });
       
-      // Setup the click event listener for Set Home:
-      // Set the control's home to the current Map center.
+      // Setup the click event listener for Logout
       google.maps.event.addDomListener(setHomeUI, 'click', function() {
         exit();
       });
       
+      // Setup the click event listener for friend Menu
       google.maps.event.addDomListener(friendMenuUI, 'click', function() {
           //$("#menu").menu();
     	  $("ul#friendMenu").sidebar({
@@ -133,40 +122,11 @@
     		  });
         });
     }    
-/*
-function addMsg(event){
-	var menu = document.getElementById("map_canvas");
-	var element = document.getElementById("addMsg");
-	
-    var lat = event.latLng.lat();
-    var lng = event.latLng.lng();
-    // populate yor box/field with lat, lng
-    alert("Lat=" + lat + "; Lng=" + lng);
-}*/     
-/*
-function geoInit() {
-    if (navigator.geolocation) {
-    	//alert("Geolocation is supported by this browser.");
-        navigator.geolocation.getCurrentPosition(showPosition);
-    } else {
-        //alert( "Geolocation is not supported by this browser." );
-    }
-}
-function showPosition(position) {
-	latitude = position.coords.latitude;
-	longitude =position.coords.longitude;
-	homeLatlng = new google.maps.LatLng(latitude,longitude);
-    homeLatlngJSON = {"lat":latitude,"lng":longitude};
-    
-    //alert("Your Location Latitude: " + latitude + "Longitude: " + longitude);
-    //alert(homeLatlngJSON);
-    //alert(JSON.stringify(homeLatlngJSON));
-    
-    postUser();
-    getUserNickName();
-}    
-*/
 
+/**
+ * geology data init function
+ * get user's location via their IP address
+ */
     
 function geoInit() {    
     if (google.loader.ClientLocation) {
@@ -181,29 +141,27 @@ function geoInit() {
         homeLatlngJSON = {"lat":latitude,"lng":longitude};
         
         text = 'Your Location<br /><br />Latitude: ' + latitude + '<br />Longitude: ' + longitude + '<br />City: ' + city + '<br />Country: ' + country + '<br />Country Code: ' + country_code + '<br />Region: ' + region;
-        //alert(text);
-        //alert(homeLatlngJSON);
-        //alert(JSON.stringify(homeLatlngJSON));
-    } else {
 
+    } else {
         text = 'Google was not able to detect your location';
         alert(text);
     }
-    //document.write(text);
 }
 
+/**
+ * post User function using AJAX to communicate with the backend
+ * post the User's login geo data to the backend and store the geo data in the memcache
+ * other uses could read from the memcache to locate your login location
+ */
 function postUser(){
 	
 	$(function(){$.ajax({
 		type:'POST',
 		url:'/context/jerseyws/postuser',
 		data:JSON.stringify(homeLatlngJSON),
-		//data:str,
 		contentType: 'application/json; charset=UTF-8',
         success: function(data){
-        	//alert("success"+data);
         	usersNicknameJSON = data;
-        	//getUsers(data);
         },
         error: function(){
         	alert("Error Hell");
@@ -213,70 +171,55 @@ function postUser(){
 }
 
 
+/**
+ * initialize function for the whole map based social network
+ */
 function initialize() {
 		 usersNicknameJSON = null;
 		 geoInit();
-		 //alert(homeLatlngJSON);
-		 //alert(JSON.stringify(homeLatlngJSON));
 		 postUser();
 		 getUserNickName();
-    	  /*var contentString = '<div id="content">'+
-          '<div id="siteNotice">'+
-          '</div>'+
-          '<h1 id="firstHeading" class="firstHeading">Uluru</h1>'+
-          '<div id="bodyContent">'+
-          '<p><b>Uluru</b>, also referred to as <b>Ayers Rock</b>, is a large ' +
-          'sandstone rock formation in the southern part of the '+
-          'Northern Territory, central Australia. It lies 335&#160;km (208&#160;mi) '+
-          'south west of the nearest large town, Alice Springs; 450&#160;km '+
-          '(280&#160;mi) by road. Kata Tjuta and Uluru are the two major '+
-          'features of the Uluru - Kata Tjuta National Park. Uluru is '+
-          'sacred to the Pitjantjatjara and Yankunytjatjara, the '+
-          'Aboriginal people of the area. It has many springs, waterholes, '+
-          'rock caves and ancient paintings. Uluru is listed as a World '+
-          'Heritage Site.</p>'+
-          '<p>Attribution: Uluru, <a href="http://en.wikipedia.org/w/index.php?title=Uluru&oldid=297882194">'+
-          'http://en.wikipedia.org/w/index.php?title=Uluru</a> '+
-          '(last visited June 22, 2009).</p>'+
-          '</div>'+
-          '</div>';*/
-
-    	//var myLatlng = new google.maps.LatLng(-25.363882,131.044922);		
+    	 
+		/**
+		 * mapOptions setup for the google map
+		 */ 
         var mapOptions = {
-          center: //new google.maps.LatLng(-34.397, 150.644),
+          center: 
           homeLatlng,
           zoom: 12,
-          //mapTypeId: google.maps.MapTypeId.ROADMAP
+    
         };
+        /**
+         * init the map with the map setting
+         */
         map = new google.maps.Map(document.getElementById("map_canvas"),
             mapOptions);
-        //placeMarker(homeLatlng,"User","","");
         
-        // Create the DIV to hold the control and call the HomeControl()
-        // constructor passing in this DIV.
         
+        /**
+         * homeControlDiv init
+         */
         homeControlDiv = document.createElement('div');
         homeControl = new HomeControl(map, homeControlDiv);
         homeControlDiv.index = 1;
         map.controls[google.maps.ControlPosition.TOP_RIGHT].push(homeControlDiv);
-
+        
+        /**
+         * longPolling AJAX function to get Other login users info from the backend memcache
+         */
     	$(function longPolling(){$.ajax({
     		type:'POST',
     		url:'/context/jerseyws/userinit',
     		data:usersNicknameJSON,
-    		//data:str,
     		contentType: 'application/json; charset=UTF-8',
             success: function(data,textStatus){
             	if(data!=null){
-            		//alert(data);
             		usersJSON = data;
             		getFriends(data);
             	}
-            	//alert("success"+data);
             	
-            	if (textStatus == "success") {
+            	//watch out for the no-content case
                     longPolling();
-                }
             },
             error: function(textStatus){
             	if("timeout"){
@@ -288,16 +231,18 @@ function initialize() {
             }
     	});});
     	
+    	/**
+    	 * longPolling AJAX function to get Other login chat msg from the backend memcache
+    	 */
     	$(function longPollingChatMsg(){$.ajax({
     		type:'GET',
     		url:'/context/jerseyws/receivemsg',
             success: function(data,textStatus){
             	if(data!=null){
             		usersJSON = data;
-            		//alert(data);
             		parseChatMsg(data);      
             	}
-            		
+            	//watch out for the no-content case
             		longPollingChatMsg();
             },
             error: function(textStatus){
@@ -310,25 +255,27 @@ function initialize() {
             }
     	});});
         
+    	/**
+    	 * get markers from the datastore using the AJAX from backend
+    	 */
     	$(function(){$.ajax({
     		type:'GET',
     		url:'/context/jerseyws/markerinit',
-    		//data:JSON.stringify(Msg),
-    		//data:str,
-    		//contentType: 'application/json; charset=UTF-8',
             success: function(data){
             	getData(data);
-            	//alert("success"+data);
             },
             error: function(){
             	alert("Error Hell");
             }
     	});});  
           
-        /*google.maps.event.addListener(map, 'click', function(event) {
-      	    placeMarker(event.latLng,"","","",null);
-      	  });*/
-        
+        /**
+         * rightclick on the map event set up
+         * when rightclick on the map, you will have a dialog that could fill out the marker information
+         * and the marker will be stored in the datastore, when other users login they will retrive the markers from the backend
+         * These markers are typed to "Msg","Alert","Review" with different logos on the map
+         * These markers could warn others ,leave a msg, give a review for a shop or others
+         */
         google.maps.event.addListener(map,'rightclick',function(event){
         	var menu = document.getElementById("map_canvas");
         	var element = document.getElementById("addMsg");
@@ -337,12 +284,9 @@ function initialize() {
             var lng = event.latLng.lng();
             
             var marker = new Object();
-            // populate yor box/field with lat, lng
-            //alert("Lat=" + lat + "; Lng=" + lng);
-            //window.open('Msg.html');
+
             $( "#myForm" ).dialog({
                 open: function() {
-                    // On open, hide the original submit button
                     $( this ).find( "[type=submit]" ).hide();
                 },
                 buttons: [
@@ -357,19 +301,12 @@ function initialize() {
                         	var json = $.toJSON(Msg);
                         	var str = "hello world";
                         	
-                        	//alert(json+" "+JSON.stringify(Msg));
-                        	/*$.getJSON("/context/jerseyws/enqueue",function(data){
-                        		alert("sucess : "+data);
-                        	});*/
-                        	//$(this).dialog("close");
                         	$(function(){$.ajax({
                         		type:'POST',
                         		url:'/context/jerseyws/enqueue',
                         		data:JSON.stringify(Msg),
-                        		//data:str,
                         		contentType: 'application/json; charset=UTF-8',
 	                            success: function(data){
-	                            	//alert("success"+data);
 	                            },
 	                            error: function(){
 	                            	alert("Error Hell");
@@ -381,56 +318,21 @@ function initialize() {
                         	$(this).dialog("close");
                         },
                         type: "submit",
-                        //form: "myForm" // <-- Make the association
                     },
                     {
                         text: "Close",
 	                        click: function() {
 	                            $( this ).dialog( "close" );
-	                       /*$.ajax({
-	                        	url:"http://localhost:8080/context/enqueue",
-	                        	type:'GET',
-	                        	datatype:'json',
-	                            contentType: 'application/json',
-	                            mimeType: 'application/json',
-	                            
-	                            success: function(data){
-	                            	alert("data:"+data);
-	                            },
-	                            error: function(data,status,er){
-	                            	alert("error");
-	                            }
-	                        });*/
                         }
                     }
                 ]
             });
-            /*$.ajax({
-            	url:"http://localhost:8080/context/enqueue",
-            	type:'GET',
-            	datatype:'json',
-                contentType: 'application/json',
-                mimeType: 'application/json',
-                
-                success: function(data){
-                	alert("data:"+data);
-                },
-                error: function(data,status,er){
-                	alert("error");
-                }
-            });*/
-            /*$.getJSON("http://localhost:8080/context/enqueue",function(data){
-            	alert("data:"+data);
-            });*/
         });
 
-        /*google.maps.event.addListener(map, 'center_changed', function() {
-          // 3 seconds after the center of the map has changed, pan back to the
-          // marker.
-          window.setTimeout(function() {
-            map.panTo(marker.getPosition());
-          }, 3000);
-        });*/
+        /**
+         * placeMarker function that will place the marker on the map, markers could be typed into
+         * "User","Alert","Msg","Review"
+         */
         function placeMarker(location,type, title, text,friend,logo) {
             var contentString = '<div id="content">'+
             '<div id="siteNotice">'+
@@ -486,6 +388,9 @@ function initialize() {
 	       	});
         }
         
+        /**
+         * parse the received markers data from the datastore
+         */
         function getData(receivedData){	
 	        if(receivedData!="]"){
 	          var data = JSON.parse(receivedData);
@@ -502,14 +407,16 @@ function initialize() {
 	      	  }
 	        }
         }
+        
+        
+        /**
+         * parse the users login data from the backend memcache
+         */
         function getFriends(receivedData){
         	var data = JSON.parse(receivedData);
-        	//$("#friendMenu").empty();
-        	//var lastData = JSON.parse(lastReceivedData);
         	
           	  for(var i=0;i<data.length;i++){
           		  var friend = data[i];
-          		  //alert(friend.nickName);
           		  
           		  if(lastReceivedData!=null){
         	  		  if(!isOnline(friend.nickName)){
@@ -551,9 +458,12 @@ function initialize() {
           	  lastReceivedData = receivedData;
             }  
         
+        /**
+         * check the offline friends msg from the users login data 
+         * this will help updating the users info on the Friends Nearby Widget
+         */
         function  checkOfflineFriends(receivedData){
         	var data = JSON.parse(receivedData);
-        	//$("#friendMenu").empty();
         	var lastData = JSON.parse(lastReceivedData);
         	var flag;
         	
@@ -566,33 +476,56 @@ function initialize() {
         		}
         		if(flag == false){
         			var li = document.getElementById(lastData[i].nickName);
-        			li.remove();
+        			if(li!=null){
+        				li.remove();
+        			}
         			friendsMarkers[lastData[i].nickName].setMap(null);
-        			//alert(friendsMarkers[lastData[i].nickName]);
         		}
         	}
         }
 }
-        
+
+/**
+ * 
+ * @param map
+ * setAllMap function this will set all the markers on the map
+ */
   function setAllMap(map){
 	  for(var i=0;i<markers.length;i++){
 		  markers[i].setMap(map);
 	  }
   }
   
+  /**
+   * clearMarkers funciton
+   * this will set all the markers hidden
+   */
   function clearMarkers(){
 	  setAllMap(null);
   }
   
+  /**
+   * showMarkers function
+   * this will show all the markers on the map
+   */
   function showMarkers(){
 	  setAllMap(map);
   }
   
+  /**
+   * deleteMarkers function
+   * this will delete all the markers from the map
+   */
   function deleteMarkers(){
 	  clearMarkers();
 	  markers=[];
   }
 
+  /**
+   * 
+   * @param receiveddata
+   * parse ChatMsg and show the msg on the chatting dialog with each user
+   */
   function parseChatMsg(receiveddata){
 	  var data = JSON.parse(receiveddata);
 	  if(data!=null){
@@ -617,7 +550,6 @@ function initialize() {
 					  var button = document.createElement('button');
 					  button.type = "submit";
 					  
-					  //$("#chatBox"+name).append('<br/><textarea id="text" rows="5" cols="20" ></textarea><br/><button type="submit"></button>');
 					  $("#"+name+"chatBox").append(button);
 				  }
 				  
@@ -631,34 +563,29 @@ function initialize() {
 					  var ul = document.createElement('ul');
 	            	  ul.id=name;
 	            	  $("#"+name+"chatBox").append(ul);
-	            	  //var each = copyMsg.shift();
-	            	  //var name = each[nickname];
-	            	  //var text = each[text];
-	            	  
-	            	  //li.innerHTML = name+":"+text;
-	            	  //$("#chatBox").find("#chattingMsg").append(li);
-	            	  //$("#chatBox").append('<ul id='+name+'></ul>');
 	            	  
 	            	  var li = document.createElement("li");
 		        	  
 		        	  li.innerHTML = name+":"+text;
 		        	  $("#"+name+"chatBox").find("#"+name).append(li);
 				  }
-				  //chatMsg.push(data[i]);
 				  lasttime = time;
 			  }
 		  }
 	  }
   }
   
+  /**
+   * 
+   * @param nickname
+   * findFriend function for opening the chatting dialog with each user
+   */
   function findFriend(nickname){
-	  //alert(userNickName);
-	  //alert(nickname);
 	  if(nickname!=userNickName){
 		  if($("#"+nickname+"chatBox").length ==0){
 			  var cb = document.createElement('div');
 			  cb.id = nickname+"chatBox";
-			  //$("#chatBox"+nickname).append('<br/><textarea id="text" rows="5" cols="20" ></textarea><br/><button type="submit"></button>');
+
 			  var textarea = document.createElement('textarea');
 			  textarea.id = "text";
 			  textarea.rows = 5;
@@ -670,7 +597,6 @@ function initialize() {
 			  var button = document.createElement('button');
 			  button.type = "submit";
 			  
-			  //$("#chatBox"+name).append('<br/><textarea id="text" rows="5" cols="20" ></textarea><br/><button type="submit"></button>');
 			  $("#"+nickname+"chatBox").append(button);
 		  }
 		  
@@ -682,22 +608,13 @@ function initialize() {
 	              
 	              var copyMsg = chatMsg;
 	              
-	              /*
-	              for(var i=0;i<copyMsg.length;i++){
-	              */
 	              if($("#"+nickname+"chatBox").find("#"+nickname).length ==0){
 	            	  var ul = document.createElement('ul');
 	            	  ul.id=nickname;
-	            	  //var each = copyMsg.shift();
-	            	  //var name = each[nickname];
-	            	  //var text = each[text];
-	            	  
-	            	  //li.innerHTML = name+":"+text;
-	            	  //$("#chatBox").find("#chattingMsg").append(li);
+
 	            	  $("#"+nickname+"chatBox").append(ul);
-	            	  //$("#chatBox").append('<ul id='+nickname+'></ul>');
-	              }
-	              //}     
+
+	              }    
 	          },
 	          buttons: [
 	              {
@@ -706,12 +623,10 @@ function initialize() {
 	                  	var text = $("#"+nickname+"chatBox").find("#text").val();
 	                  	date = new Date();
 	                  	time = date.getTime();
-	                  	//chatMsg.push({"time":time,"nickname":userNickName,"text":text});
+	                  	
 	                  	var li = document.createElement("li");
 		            	li.innerHTML = userNickName+":"+text;
 		            	$("#"+nickname+"chatBox").find("#"+nickname).append(li);
-		            	//lasttime = time;
-		            	//$("#chatBox").find("#chattingMsg").append(li);
 	                  	
 		            	var msgSent = {"time":time,"nickname":nickname,"text":text};
 	                  	
@@ -719,37 +634,40 @@ function initialize() {
 	                  		type:'POST',
 	                  		url:'/context/jerseyws/sendmsg',
 	                  		data:JSON.stringify(msgSent),
-	                  		//data:str,
+	                  		
 	                  		contentType: 'application/json; charset=UTF-8',
 	                          success: function(data){
-	                          	//alert("success"+data);
+	                          	
 	                          },
 	                          error: function(){
 	                          	alert("Error Hell");
 	                          }
 	                  	});});
 	                  	
-	                  	//placeMarker(event.latLng,type,title,text,null);
-	                  	
-	                  	//$(this).dialog("close");
 	                  },
 	                  type: "submit",
-	                  //form: "myForm" // <-- Make the association
+	                  
 	              },
 	              {
 	                  text: "Close",
 	                      click: function() {
-	                    	  //$("#chatBox").find("#"+nickname).empty();
+	                    	  
 	                          $( this ).dialog( "close" );
 	                  }
 	              }
 	          ]
 	      });
-	      //$("#chatBox").find("#chattingMsg").empty();
-  
 	  }
   }
   
+  /**
+   * 
+   * @param nickname
+   * @returns {Boolean}
+   * 
+   * checks if a user is online
+   * return true/false
+   */
   function isOnline(nickname){
 	 	var lastData = JSON.parse(lastReceivedData);
 		var flag=false;
@@ -761,6 +679,13 @@ function initialize() {
 		}
 		return flag;
   }
+  /**
+   * 
+   * @param nickname
+   * @returns
+   * get User's logo from the recievedData from the datastore
+   * 
+   */
   function getUserLogo(nickname){
   	var data = JSON.parse(usersNicknameJSON);
   	
@@ -771,26 +696,16 @@ function initialize() {
 	  }
   }
 
+  /**
+   * set Logo function when clicking on the Account Logo button
+   */
 function setLogo(){
 	window.location.href='http://pure-league-728.appspot.com/setlogo.jsp';
-	/*$(function(){$.ajax({
-		type:'GET',
-		async: false,
-		url:'/context/jerseyws/setlogo',
-		//data:JSON.stringify(Msg),
-		//data:str,
-		//contentType: 'application/json; charset=UTF-8',
-        success: function(data){
-        	if(data!='failure'){
-        		window.location.href=data;
-        	}
-        },
-        error: function(){
-        	alert("Error Hell");
-        }
-	});});*/
 }  
-  
+
+/**
+ * log out function 
+ */
 function exit(){
 	var confirmExit = confirm("Are you sure to exit the app?");
 	
@@ -799,9 +714,6 @@ function exit(){
     		type:'GET',
     		async: false,
     		url:'/context/jerseyws/loginout',
-    		//data:JSON.stringify(Msg),
-    		//data:str,
-    		//contentType: 'application/json; charset=UTF-8',
             success: function(data){
             	if(data!='failure'){
             		window.location.href=data;
@@ -811,11 +723,12 @@ function exit(){
             	alert("Error Hell");
             }
     	});});
-    	
-    	//window.location.href='http://arctic-defender-728.appspot.com/login.jsp';
 	}
 }
 
+/**
+ * get the User's nickname from the backend
+ */
 function getUserNickName(){
 	$(function(){$.ajax({
 		type:'GET',
@@ -834,6 +747,10 @@ function getUserNickName(){
 	});});
 }
 
+/**
+ * main function 
+ * addDomListener for the window loading event
+ * after loading the initialize function will be loaded
+ */
 google.maps.event.addDomListener(window, 'load', initialize);
-//google.maps.event.addDomListener(window, 'onbeforeunload', exit);
-//window.onbeforeunload = exit;
+

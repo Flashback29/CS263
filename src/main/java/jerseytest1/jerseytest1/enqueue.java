@@ -55,74 +55,48 @@ import com.google.gson.JsonElement;
 
 import static com.google.appengine.api.taskqueue.TaskOptions.Builder.*;
 
+/**
+ * enqueue class is a large class of the RESTful backend JAVA class methods
+ * These methods contain the interact with GAE APIs including Datastore, Memcache, Blobstore, Taskqueue
+ * Imageservice, User APIs
+ * With these APIs we could utilize the Paas(Platform as a service) structure of Web Development
+ * 
+ * @author LiuYuan
+ *
+ */
+
 @Path("/jerseyws")
 public class enqueue {
+	
+	/**
+	 * msg is a method in charge of using the Taskqueue API to queue the operation
+	 * that will store data into the datastore
+	 * 
+	 * @author LiuYuan
+	 *
+	 */
 	@POST
-	//@GET
-	//@Produces(MediaType.APPLICATION_JSON)
 	@Path("/enqueue/")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public String msg( /*@PathParam("json")String str*/ String json){
-		/*StringBuilder sb = new StringBuilder();
-		
-		try{
-			BufferedReader br = new BufferedReader(new InputStreamReader(json));
-			String line = null;
-			while((line = br.readLine())!=null){
-				sb.append(line);
-			}
-			
-		}catch(Exception e){
-			System.out.println("error");
-		}*/
-		Msg msg = new Msg("29","29","Alert","warning","IV");
-		Gson gson = new Gson();
-		String str = gson.toJson(msg);
-		
+	public String msg(String json){
 		Queue queue = QueueFactory.getDefaultQueue();
 		queue.add(withUrl("/context/jerseyws/worker").payload(json).method(TaskOptions.Method.POST));
 		
-		//Msg msg  = gson.fromJson(json,Msg.class);
-		//Msg msg = gson.fromJson(str, Msg.class);
-		
-		//String str = msg.getText()+msg.getTitle()+msg.getType();
-		//System.out.println(msg.getText()+msg.getTitle()+msg.getType());
-		//return Response.status(200).entity("hello world").build();
-		//return Response.status(200).entity(str).build();
-		//return str;
 		return json;
 	}
 	
 	
-	//@POST
+	/**
+	 * markerInit method is in charge of getting all the markers that have been stored in the datastore
+	 * back to the frontend via AJAX using JSON as the data format
+	 * 
+	 * @return JSON(String)
+	 */
 	@GET
-	//@Produces(MediaType.APPLICATION_JSON)
 	@Path("/markerinit/")
-	//@Consumes(MediaType.APPLICATION_JSON)
-	public String markerInit( /*@PathParam("json")String str*/ /*String json*/){
-		/*StringBuilder sb = new StringBuilder();
-		
-		try{
-			BufferedReader br = new BufferedReader(new InputStreamReader(json));
-			String line = null;
-			while((line = br.readLine())!=null){
-				sb.append(line);
-			}
-			
-		}catch(Exception e){
-			System.out.println("error");
-		}*/
+	public String markerInit(){
 		Msg msg = new Msg();
 		Gson gson = new Gson();
-		//String str = gson.toJson(msg);
-		
-		//Msg msg  = gson.fromJson(json,Msg.class);
-		//Msg msg = gson.fromJson(str, Msg.class);
-		
-		//String str = msg.getText()+msg.getTitle()+msg.getType();
-		//System.out.println(msg.getText()+msg.getTitle()+msg.getType());
-		//return Response.status(200).entity("hello world").build();
-		//return Response.status(200).entity(str).build();
 		
 		DatastoreService ds = DatastoreServiceFactory.getDatastoreService();
 		
@@ -139,12 +113,19 @@ public class enqueue {
 		return s;
 	}
 	
+	/**
+	 * userInit is a method in charge of getting all the login users from the memcache
+	 * param json sent in is the JSON format data of all the registered users info from the frontend
+	 * this json is also got from the backend method
+	 * these login users info will be sent back to the frontend via AJAX using JSON data format
+	 * 
+	 * @param json
+	 * @return
+	 */
 	@POST
-	//@GET
-	//@Produces(MediaType.APPLICATION_JSON)
 	@Path("/userinit/")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public String userInit( /*@PathParam("json")String str*/ String json){
+	public String userInit(String json){
 	    
 		MemcacheService syncCache = MemcacheServiceFactory.getMemcacheService();
 	    syncCache.setErrorHandler(ErrorHandlers.getConsistentLogAndContinue(Level.INFO));
@@ -177,6 +158,11 @@ public class enqueue {
 	  	}
 	}
 	
+	/**
+	 * getUserName method is a method that will return the login user's nickname to the frontend via AJAX
+	 * 
+	 * @return nickname(String)
+	 */
 	@GET
 	@Path("/getusername/")
 	public String getUserName(){
@@ -193,12 +179,18 @@ public class enqueue {
 		
 	}
 	
+	/**
+	 * postUser is a method that is in charge of getting the user's geo location info and user's nickname stored into the memcache
+	 * and returns all the registered user info back to the frontend
+	 * with these registered user info the frontend could consult whether these registered users have login from the memcache
+	 * 
+	 * @param json(JSON format of latlng class)
+	 * @return registeredUsersInfo(JSON format)
+	 */
 	@POST
-	//@GET
-	//@Produces(MediaType.APPLICATION_JSON)
 	@Path("/postuser/")
 	@Consumes(MediaType.APPLICATION_JSON)
-	public String postUser( /*@PathParam("json")String str*/ String json){
+	public String postUser(String json){
 	  	UserService userService = UserServiceFactory.getUserService();
 	  	User user = userService.getCurrentUser();
 	  	
@@ -237,7 +229,6 @@ public class enqueue {
 		  		{
 			  		Entity userEntity = new Entity("nickname",user.getNickname());
 			  		userEntity.setProperty("logo", "");
-			  		//userEntity.setProperty("friends", gson.toJson(new MapUser("","",user.getNickname())));
 			  		ds.put(userEntity);
 					
 					Query q = new Query("nickname");
@@ -264,22 +255,16 @@ public class enqueue {
 		return returnjson;
 	}
 	
+	/**
+	 * loginOut method is a method in charge of returning the log out url to the front end for users to log out
+	 * this method will also delete the login info in the memcache
+	 * and other users once update info from the memcache will get this log out info of this user
+	 * 
+	 * @return
+	 */
 	@GET
-	//@Produces(MediaType.APPLICATION_JSON)
-	@Path("/setlogo/")
-	//@Consumes(MediaType.APPLICATION_JSON)
-	public String setLogo(){
-	    
-		BlobstoreService blobstoreService = BlobstoreServiceFactory.getBlobstoreService();
-	    
-		return "";
-	}
-	
-	@GET
-	//@Produces(MediaType.APPLICATION_JSON)
 	@Path("/loginout/")
-	//@Consumes(MediaType.APPLICATION_JSON)
-	public String loginOut( /*@PathParam("json")String str*/ /*String json*/){
+	public String loginOut(){
 	    
 		MemcacheService syncCache = MemcacheServiceFactory.getMemcacheService();
 	    syncCache.setErrorHandler(ErrorHandlers.getConsistentLogAndContinue(Level.INFO));
@@ -307,9 +292,14 @@ public class enqueue {
 		}
 	}
 	
+	/**
+	 * Worker method is a method that will store the marker info into the datastore from Taskqueue operations
+	 * json is the Msg format JSON data
+	 * 
+	 * @param json
+	 */
 	@POST
 	@Path("/worker/")
-	//@Consumes(MediaType.APPLICATION_JSON)
 	public void Worker(String json){
 	 Gson gson = new Gson();	
 	 Msg msg = gson.fromJson(json,Msg.class);
@@ -323,17 +313,19 @@ public class enqueue {
      taskData.setProperty("title",msg.getTitle());
      taskData.setProperty("text",msg.getText());
      
-     //Entity taskData = new Entity("latLng","29,29");
-     //taskData.setProperty("type","Alert");
-     //taskData.setProperty("title","Halloween parade");
-     //taskData.setProperty("text","look out for the parade");
-     
      ds.put(taskData);
 	}
 	
+	/**
+	 * sendMsg method is a method in charge of storing the chatting msg info from different users
+	 * into the memcache
+	 * so the destination users will find the msgs sent to them in the memcache
+	 * once succeed this method will return "success"
+	 * 
+	 * @param json
+	 * @return
+	 */
 	@POST
-	//@GET
-	//@Produces(MediaType.APPLICATION_JSON)
 	@Path("/sendmsg/")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public String sendMsg(String json){
@@ -361,11 +353,13 @@ public class enqueue {
 	}
 	
 	
-	//@POST
+	/**
+	 * receiveMsg method is the opposite method of sendMsg method
+	 * this method will get the chat msg sent to the user who sent the GET request from frontend
+	 * @return
+	 */
 	@GET
-	//@Produces(MediaType.APPLICATION_JSON)
 	@Path("/receivemsg/")
-	//@Consumes(MediaType.APPLICATION_JSON)
 	public String receiveMsg(){
 		
 		MemcacheService syncCache = MemcacheServiceFactory.getMemcacheService();
@@ -377,6 +371,15 @@ public class enqueue {
 	  	return (String)syncCache.get(user.getNickname()+"Msg");
 	}
 	
+	/**
+	 * uplad method is the method in charge of storing the uploaded pic as the user's logo
+	 * and stores the pic's url into that user's datastore
+	 * next time the user is retrieving data from the datastore the user will get his logo's url and show his account logo on the User marker
+	 * 
+	 * @param req
+	 * @param res
+	 * @throws Exception
+	 */
 	@POST
 	@Path("/upload")
 	 public void upload(@Context HttpServletRequest req,@Context HttpServletResponse res)
@@ -402,7 +405,6 @@ public class enqueue {
 	     if (blobKey == null) {
 	         res.sendRedirect("/");
 	     } else {
-	         //res.sendRedirect("/serve?blob-key=" + blobKey.getKeyString());
 	    	 res.sendRedirect("/map.html");
 	     }
 	 }
