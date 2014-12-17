@@ -4,15 +4,17 @@ public class MapUser {
 	public String nickName;
 	public String lat;
 	public String lng;
+	public String logo;
 	
 	public MapUser(){
 		
 	}
 	
-	public MapUser(String lat,String lng, String nickName){
+	public MapUser(String lat,String lng, String nickName,String logo){
 		this.nickName = nickName;
 		this.lat = lat;
 		this.lng = lng;
+		this.logo = logo;
 	}
 	
 	public String getLat(){
@@ -26,5 +28,8 @@ public class MapUser {
 	}
 	public String getLatLng(){
 		return lat+","+lng;
+	}
+	public String getLogo(){
+		return logo;
 	}
 }

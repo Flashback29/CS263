@@ -1,10 +1,15 @@
 package jerseytest1.jerseytest1;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Map;
 import java.util.logging.Level;
 
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -16,6 +21,15 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import com.google.appengine.api.xmpp.JID;
+import com.google.appengine.api.xmpp.Message;
+import com.google.appengine.api.xmpp.MessageBuilder;
+import com.google.appengine.api.xmpp.SendResponse;
+import com.google.appengine.api.xmpp.XMPPService;
+import com.google.appengine.api.xmpp.XMPPServiceFactory;
+import com.google.appengine.api.blobstore.BlobKey;
+import com.google.appengine.api.blobstore.BlobstoreService;
+import com.google.appengine.api.blobstore.BlobstoreServiceFactory;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
@@ -24,6 +38,8 @@ import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.PreparedQuery;
 import com.google.appengine.api.datastore.Query;
+import com.google.appengine.api.images.ImagesService;
+import com.google.appengine.api.images.ImagesServiceFactory;
 import com.google.appengine.api.memcache.ErrorHandlers;
 import com.google.appengine.api.memcache.MemcacheService;
 import com.google.appengine.api.memcache.MemcacheServiceFactory;
@@ -161,6 +177,22 @@ public class enqueue {
 	  	}
 	}
 	
+	@GET
+	@Path("/getusername/")
+	public String getUserName(){
+	  	UserService userService = UserServiceFactory.getUserService();
+	  	User user = userService.getCurrentUser();
+	  	
+	  	if(user!=null){
+	  		return user.getNickname();
+	  	}
+	  	else{
+	  		return "failure";
+	  	}
+	  	
+		
+	}
+	
 	@POST
 	//@GET
 	//@Produces(MediaType.APPLICATION_JSON)
@@ -169,6 +201,7 @@ public class enqueue {
 	public String postUser( /*@PathParam("json")String str*/ String json){
 	  	UserService userService = UserServiceFactory.getUserService();
 	  	User user = userService.getCurrentUser();
+	  	
 	  	
 		MemcacheService syncCache = MemcacheServiceFactory.getMemcacheService();
 	    syncCache.setErrorHandler(ErrorHandlers.getConsistentLogAndContinue(Level.INFO));
@@ -180,8 +213,9 @@ public class enqueue {
 	  	Key key = KeyFactory.createKey("nickname", user.getNickname());
 	  	String s = "[";
 	  	String returnjson = "";
+	  	String logo = "";
 	  	
-	  	if(json!=null){
+	  	if(json!=null && latlng!=null){
 		  	if(user!=null){
 		  		try{
 		  			Entity e = ds.get(key);
@@ -190,7 +224,10 @@ public class enqueue {
 					PreparedQuery pq = ds.prepare(q);
 					
 					for( Entity result : pq.asIterable() ){
-						s = s+ gson.toJson(new MapUser("","",result.getKey().getName()))+",";
+						s = s+ gson.toJson(new MapUser("","",result.getKey().getName(),result.getProperty("logo").toString()))+",";
+						if(result.getKey().getName().equals(user.getNickname())){
+							logo = result.getProperty("logo").toString();
+						}
 					}
 					s=s.substring(0, s.length()-1);
 					s = s+"]";
@@ -199,11 +236,25 @@ public class enqueue {
 		  		catch(EntityNotFoundException e)	  		
 		  		{
 			  		Entity userEntity = new Entity("nickname",user.getNickname());
+			  		userEntity.setProperty("logo", "");
 			  		//userEntity.setProperty("friends", gson.toJson(new MapUser("","",user.getNickname())));
 			  		ds.put(userEntity);
+					
+					Query q = new Query("nickname");
+					PreparedQuery pq = ds.prepare(q);
+					
+					for( Entity result : pq.asIterable() ){
+						s = s+ gson.toJson(new MapUser("","",result.getKey().getName(),result.getProperty("logo").toString()))+",";
+						if(result.getKey().getName().equals(user.getNickname())){
+							logo = result.getProperty("logo").toString();
+						}
+					}
+					s=s.substring(0, s.length()-1);
+					s = s+"]";
+					returnjson = s;
 		  		}
 		  		
-		  		MapUser userMemc = new MapUser(latlng.getLat(),latlng.getLng(),user.getNickname());
+		  		MapUser userMemc = new MapUser(latlng.getLat(),latlng.getLng(),user.getNickname(),logo);
 		  		syncCache.put(user.getNickname(), gson.toJson(userMemc));
 		  	}
 		  	else{
@@ -213,6 +264,16 @@ public class enqueue {
 		return returnjson;
 	}
 	
+	@GET
+	//@Produces(MediaType.APPLICATION_JSON)
+	@Path("/setlogo/")
+	//@Consumes(MediaType.APPLICATION_JSON)
+	public String setLogo(){
+	    
+		BlobstoreService blobstoreService = BlobstoreServiceFactory.getBlobstoreService();
+	    
+		return "";
+	}
 	
 	@GET
 	//@Produces(MediaType.APPLICATION_JSON)
@@ -228,6 +289,8 @@ public class enqueue {
 	    
 	  	Msg msg = new Msg();
 		Gson gson = new Gson();	
+		
+		Key key = KeyFactory.createKey("nickname", user.getNickname());
 		
 	 	String signOutHref = userService.createLogoutURL("/login.jsp");
 	  	
@@ -267,4 +330,80 @@ public class enqueue {
      
      ds.put(taskData);
 	}
+	
+	@POST
+	//@GET
+	//@Produces(MediaType.APPLICATION_JSON)
+	@Path("/sendmsg/")
+	@Consumes(MediaType.APPLICATION_JSON)
+	public String sendMsg(String json){
+		UserService userService = UserServiceFactory.getUserService();
+	  	User user = userService.getCurrentUser();
+		
+	  	MemcacheService syncCache = MemcacheServiceFactory.getMemcacheService();
+	    syncCache.setErrorHandler(ErrorHandlers.getConsistentLogAndContinue(Level.INFO));
+	  	
+	  	Gson gson = new Gson();
+	  	ChatMsg chatmsg = gson.fromJson(json, ChatMsg.class);
+	  	ChatMsg msg = new ChatMsg(chatmsg.getTime(),user.getNickname(),chatmsg.getText());
+	  	
+	  	if(syncCache.get(chatmsg.getNickname()+"Msg")==null){
+	  		syncCache.put(chatmsg.getNickname()+"Msg", "["+gson.toJson(msg)+"]");
+	  	}
+	  	else{
+	  		String s = (String)syncCache.get(chatmsg.getNickname()+"Msg");
+	  		s=s.substring(0, s.length()-1);
+	  		s = s + "," +gson.toJson(msg)+"]";
+	  		
+	  		syncCache.put(chatmsg.getNickname()+"Msg", s);
+	  	}
+	  	return "success";
+	}
+	
+	
+	//@POST
+	@GET
+	//@Produces(MediaType.APPLICATION_JSON)
+	@Path("/receivemsg/")
+	//@Consumes(MediaType.APPLICATION_JSON)
+	public String receiveMsg(){
+		
+		MemcacheService syncCache = MemcacheServiceFactory.getMemcacheService();
+	    syncCache.setErrorHandler(ErrorHandlers.getConsistentLogAndContinue(Level.INFO));
+		
+	  	UserService userService = UserServiceFactory.getUserService();
+	  	User user = userService.getCurrentUser();
+	  	
+	  	return (String)syncCache.get(user.getNickname()+"Msg");
+	}
+	
+	@POST
+	@Path("/upload")
+	 public void upload(@Context HttpServletRequest req,@Context HttpServletResponse res)
+	     throws Exception {
+		 BlobstoreService blobstoreService = BlobstoreServiceFactory.getBlobstoreService();
+		 UserService userService = UserServiceFactory.getUserService();
+	     ImagesService imagesService = ImagesServiceFactory.getImagesService();
+	     User userName = userService.getCurrentUser();
+	     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+	     
+		 Map<String, BlobKey> blobs = blobstoreService.getUploadedBlobs(req);
+	     BlobKey blobKey = blobs.get("myFile");
+	     
+	     String imageUrl = null;
+	     imageUrl = imagesService.getServingUrl(blobKey);
+	     
+	     Key key = KeyFactory.createKey("nickname", userName.getNickname());
+	     Entity e = datastore.get(key);
+	     
+	     e.setProperty("logo", imageUrl);
+	     datastore.put(e);
+
+	     if (blobKey == null) {
+	         res.sendRedirect("/");
+	     } else {
+	         //res.sendRedirect("/serve?blob-key=" + blobKey.getKeyString());
+	    	 res.sendRedirect("/map.html");
+	     }
+	 }
 }

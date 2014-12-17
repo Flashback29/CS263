@@ -3,7 +3,7 @@
   <head>
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
     <style type="text/css">
-	      html,body,#map_canvas { height: 100%; margin: 0; padding: 0 }
+	      html,body,#map_canvas { height: 100%; width: 100%; margin: 0; padding: 0;overflow:hidden;position:fixed }
       
 	     #panel {
 	     position: absolute;
@@ -44,6 +44,17 @@
       <label for="Show Review">Show Review</label>
       <input checked="checked" type="checkbox" id="checkBoxReview" onclick="checkBoxReview();">
     </div>
+    
+    <!--
+    <div id="chatBox">
+    <ul id="chattingMsg" >
+	</ul>
+	<br/>
+    <textarea id="text" rows="5" cols="20" ></textarea>
+    <br/>
+    <button type="submit"></button>
+    </div>-->
+
     
     <div id="myForm">
        <label for="Msg Title">Select Msg Type</label>

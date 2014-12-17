@@ -19,7 +19,7 @@
 
   <meta charset="UTF-8">
 
-  <title>Login  - CodePen</title>
+  <title>Login  - Google Map based Social Network</title>
 
   <link rel="stylesheet" href="stylesheet/reset.css">
 
@@ -43,7 +43,7 @@
     %>	
     
     	<script type="text/javascript">
-    		window.location.href='http://arctic-defender-728.appspot.com/map.html';
+    		window.location.href='http://pure-league-728.appspot.com/map.html';
     	</script>
     
     <%

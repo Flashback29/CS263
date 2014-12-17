@@ -5,6 +5,7 @@
     var reviewMarkers=[];
     var userMarkers= [];
     var friendsMarkers={};
+    var chatMsg = [];
     var latitude;
     var longitude ;
     var city ;
@@ -17,12 +18,16 @@
     var usersJSON;
     var usersNicknameJSON;
     var lastReceivedData;
+    var userNickName;
+    var homeControlDiv;
+    var homeControl;
+    var lasttime=0;
     
     /**
      * The HomeControl adds a control to the map that
      * returns the user to the control's defined home.
      */
-
+    /*
     // Define a property to hold the Home state.
     HomeControl.prototype.home_ = null;
 
@@ -34,8 +39,9 @@
     HomeControl.prototype.setHome = function(home) {
       this.home_ = home;
     };
+    */
 
-    function HomeControl(map, div, home) {
+    function HomeControl(map, div) {
 
       // Get the control DIV. We'll attach our control UI to this DIV.
       var controlDiv = div;
@@ -45,13 +51,13 @@
       var control = this;
 
       // Set the home property upon construction.
-      control.home_ = home;
+      //control.home_ = home;
 
       // Set CSS styles for the DIV containing the control. Setting padding to
       // 5 px will offset the control from the edge of the map.
       controlDiv.style.padding = '5px';
 
-      // Client Location
+      // 1.Client Location
       var goHomeUI = document.createElement('div');
       goHomeUI.title = 'Click to set the map to Your Location';
       controlDiv.appendChild(goHomeUI);
@@ -62,7 +68,7 @@
       goHomeUI.appendChild(goHomeText);
 
       
-      // Client Logout
+      // 2.Client Logout
       var setHomeUI = document.createElement('div');
       setHomeUI.title = 'Click to login out';
       controlDiv.appendChild(setHomeUI);
@@ -72,7 +78,7 @@
       setHomeText.innerHTML = '<strong>Login out</strong>';
       setHomeUI.appendChild(setHomeText);
       
-      // Show Your Friends
+      // 3.Show Your Friends
       var friendMenuUI = document.createElement('div');
       friendMenuUI.title = 'Friends Menu';
       controlDiv.appendChild(friendMenuUI);
@@ -81,14 +87,28 @@
       var friendMenuText = document.createElement('div');
       friendMenuText.innerHTML = '<strong>People Nearby</strong>';
       friendMenuUI.appendChild(friendMenuText);
+      
+      // 4.Set your account logo
+      var logoUI = document.createElement('div');
+      logoUI.title = 'Set Your Account Logo';
+      controlDiv.appendChild(logoUI);
 
-      // Setup the click event listener for Home:
+      // Set CSS for the control interior.
+      var logoText = document.createElement('div');
+      logoText.innerHTML = '<strong>Account Logo</strong>';
+      logoUI.appendChild(logoText);
+
+      // Setup the click event listener for goHome:
       // simply set the map to the control's current home property.
       google.maps.event.addDomListener(goHomeUI, 'click', function() {
-        var currentHome = control.getHome();
-        map.setCenter(currentHome);
+        //var currentHome = control.getHome();
+        map.setCenter(homeLatlng);
       });
-
+           
+      //Set account logo button
+      google.maps.event.addDomListener(logoUI, 'click', function() {
+          setLogo();
+      });
       
       // Setup the click event listener for Set Home:
       // Set the control's home to the current Map center.
@@ -123,7 +143,31 @@ function addMsg(event){
     // populate yor box/field with lat, lng
     alert("Lat=" + lat + "; Lng=" + lng);
 }*/     
+/*
+function geoInit() {
+    if (navigator.geolocation) {
+    	//alert("Geolocation is supported by this browser.");
+        navigator.geolocation.getCurrentPosition(showPosition);
+    } else {
+        //alert( "Geolocation is not supported by this browser." );
+    }
+}
+function showPosition(position) {
+	latitude = position.coords.latitude;
+	longitude =position.coords.longitude;
+	homeLatlng = new google.maps.LatLng(latitude,longitude);
+    homeLatlngJSON = {"lat":latitude,"lng":longitude};
+    
+    //alert("Your Location Latitude: " + latitude + "Longitude: " + longitude);
+    //alert(homeLatlngJSON);
+    //alert(JSON.stringify(homeLatlngJSON));
+    
+    postUser();
+    getUserNickName();
+}    
+*/
 
+    
 function geoInit() {    
     if (google.loader.ClientLocation) {
 
@@ -137,16 +181,19 @@ function geoInit() {
         homeLatlngJSON = {"lat":latitude,"lng":longitude};
         
         text = 'Your Location<br /><br />Latitude: ' + latitude + '<br />Longitude: ' + longitude + '<br />City: ' + city + '<br />Country: ' + country + '<br />Country Code: ' + country_code + '<br />Region: ' + region;
-        //alert(text);	
+        //alert(text);
+        //alert(homeLatlngJSON);
+        //alert(JSON.stringify(homeLatlngJSON));
     } else {
 
         text = 'Google was not able to detect your location';
-        //alert(text);
+        alert(text);
     }
     //document.write(text);
 }
 
 function postUser(){
+	
 	$(function(){$.ajax({
 		type:'POST',
 		url:'/context/jerseyws/postuser',
@@ -155,21 +202,25 @@ function postUser(){
 		contentType: 'application/json; charset=UTF-8',
         success: function(data){
         	//alert("success"+data);
-        	getUsers(data);
+        	usersNicknameJSON = data;
+        	//getUsers(data);
         },
         error: function(){
         	alert("Error Hell");
         }
 	});});
+	
 }
 
 
 function initialize() {
 		 usersNicknameJSON = null;
 		 geoInit();
+		 //alert(homeLatlngJSON);
+		 //alert(JSON.stringify(homeLatlngJSON));
 		 postUser();
-		 
-    	  var contentString = '<div id="content">'+
+		 getUserNickName();
+    	  /*var contentString = '<div id="content">'+
           '<div id="siteNotice">'+
           '</div>'+
           '<h1 id="firstHeading" class="firstHeading">Uluru</h1>'+
@@ -188,10 +239,8 @@ function initialize() {
           'http://en.wikipedia.org/w/index.php?title=Uluru</a> '+
           '(last visited June 22, 2009).</p>'+
           '</div>'+
-          '</div>';
-        var infoWindow = new google.maps.InfoWindow({
-        	content: contentString
-        });
+          '</div>';*/
+
     	//var myLatlng = new google.maps.LatLng(-25.363882,131.044922);		
         var mapOptions = {
           center: //new google.maps.LatLng(-34.397, 150.644),
@@ -206,8 +255,10 @@ function initialize() {
         // Create the DIV to hold the control and call the HomeControl()
         // constructor passing in this DIV.
         
-        var homeControlDiv = document.createElement('div');
-        var homeControl = new HomeControl(map, homeControlDiv, homeLatlng);
+        homeControlDiv = document.createElement('div');
+        homeControl = new HomeControl(map, homeControlDiv);
+        homeControlDiv.index = 1;
+        map.controls[google.maps.ControlPosition.TOP_RIGHT].push(homeControlDiv);
 
     	$(function longPolling(){$.ajax({
     		type:'POST',
@@ -217,6 +268,7 @@ function initialize() {
     		contentType: 'application/json; charset=UTF-8',
             success: function(data,textStatus){
             	if(data!=null){
+            		//alert(data);
             		usersJSON = data;
             		getFriends(data);
             	}
@@ -235,6 +287,28 @@ function initialize() {
             	}
             }
     	});});
+    	
+    	$(function longPollingChatMsg(){$.ajax({
+    		type:'GET',
+    		url:'/context/jerseyws/receivemsg',
+            success: function(data,textStatus){
+            	if(data!=null){
+            		usersJSON = data;
+            		//alert(data);
+            		parseChatMsg(data);      
+            	}
+            		
+            		longPollingChatMsg();
+            },
+            error: function(textStatus){
+            	if("timeout"){
+            		longPollingChatMsg();
+            	}
+            	else{
+            		longPollingChatMsg();
+            	}
+            }
+    	});});
         
     	$(function(){$.ajax({
     		type:'GET',
@@ -244,15 +318,12 @@ function initialize() {
     		//contentType: 'application/json; charset=UTF-8',
             success: function(data){
             	getData(data);
-            	alert("success"+data);
+            	//alert("success"+data);
             },
             error: function(){
             	alert("Error Hell");
             }
-    	});});
-        
-        homeControlDiv.index = 1;
-        map.controls[google.maps.ControlPosition.TOP_RIGHT].push(homeControlDiv);  
+    	});});  
           
         /*google.maps.event.addListener(map, 'click', function(event) {
       	    placeMarker(event.latLng,"","","",null);
@@ -267,7 +338,7 @@ function initialize() {
             
             var marker = new Object();
             // populate yor box/field with lat, lng
-            alert("Lat=" + lat + "; Lng=" + lng);
+            //alert("Lat=" + lat + "; Lng=" + lng);
             //window.open('Msg.html');
             $( "#myForm" ).dialog({
                 open: function() {
@@ -286,7 +357,7 @@ function initialize() {
                         	var json = $.toJSON(Msg);
                         	var str = "hello world";
                         	
-                        	alert(json+" "+JSON.stringify(Msg));
+                        	//alert(json+" "+JSON.stringify(Msg));
                         	/*$.getJSON("/context/jerseyws/enqueue",function(data){
                         		alert("sucess : "+data);
                         	});*/
@@ -298,14 +369,14 @@ function initialize() {
                         		//data:str,
                         		contentType: 'application/json; charset=UTF-8',
 	                            success: function(data){
-	                            	alert("success"+data);
+	                            	//alert("success"+data);
 	                            },
 	                            error: function(){
 	                            	alert("Error Hell");
 	                            }
                         	});});
                         	
-                        	placeMarker(event.latLng,type,title,text,null);
+                        	placeMarker(event.latLng,type,title,text,null,null);
                         	
                         	$(this).dialog("close");
                         },
@@ -360,7 +431,17 @@ function initialize() {
             map.panTo(marker.getPosition());
           }, 3000);
         });*/
-        function placeMarker(location,type, title, text,friend) {
+        function placeMarker(location,type, title, text,friend,logo) {
+            var contentString = '<div id="content">'+
+            '<div id="siteNotice">'+
+            '</div>'+
+            '<h1 id="firstHeading" class="firstHeading">'+title+'</h1>'+
+            '<div id="bodyContent">'+
+            '<p>'+text+'</p>'+
+            '</div>'+
+            '</div>';
+        	var infoWindow;
+        	
 	        	switch(type){
 		        	case "Msg":var image='image/Technorati.png';break;
 		        	case "Alert":var image = 'image/Alert.png';break;
@@ -377,10 +458,12 @@ function initialize() {
 	        	      icon:image
 	        	  });
 	        switch(type){
-	        	case "Msg":msgMarkers.push(marker);alert(msgMarkers.length);break;
-	        	case "Alert":alertMarkers.push(marker);alert(alertMarkers.length);break;
-	        	case "Review":reviewMarkers.push(marker);alert(reviewMarkers.length);break;
-	        	case "User":userMarkers.push(marker);alert(userMarkers.length);friendsMarkers[friend]=marker;break;
+	        	case "Msg":msgMarkers.push(marker);break;
+	        	case "Alert":alertMarkers.push(marker);break;
+	        	case "Review":reviewMarkers.push(marker);break;
+	        	case "User":userMarkers.push(marker);friendsMarkers[friend]=marker;
+	        	contentString = '<div><h1>'+friend+' Logo'+'</h1><img src='+logo+'></div>';
+	        	break;
 	        	default:break;
         	}
 	        map.setCenter(location);
@@ -393,24 +476,31 @@ function initialize() {
 	       			marker.setAnimation(google.maps.Animation.BOUNCE);
 	       		}
 	       	});
+	       	
+	        infoWindow = new google.maps.InfoWindow({
+            	content: contentString
+            });
+	       	
 	       	google.maps.event.addListener(marker,'click',function(){
 	       		infoWindow.open(map,marker);
 	       	});
         }
         
-        function getData(receivedData){
-        	var data = JSON.parse(receivedData);
-      	  for(var i=0;i<data.length;i++){
-      		  var msg = data[i];
-      		  var type = msg.type;
-      		  var lat = msg.lat;
-      		  var lng = msg.lng;
-      		  var title = msg.title;
-      		  var text = msg.text;
-      		  
-      		  var latLng = new google.maps.LatLng(lat,lng);
-      		  placeMarker(latLng,type,title,text,null);
-      	  }
+        function getData(receivedData){	
+	        if(receivedData!="]"){
+	          var data = JSON.parse(receivedData);
+	      	  for(var i=0;i<data.length;i++){
+	      		  var msg = data[i];
+	      		  var type = msg.type;
+	      		  var lat = msg.lat;
+	      		  var lng = msg.lng;
+	      		  var title = msg.title;
+	      		  var text = msg.text;
+	      		  
+	      		  var latLng = new google.maps.LatLng(lat,lng);
+	      		  placeMarker(latLng,type,title,text,null,null);
+	      	  }
+	        }
         }
         function getFriends(receivedData){
         	var data = JSON.parse(receivedData);
@@ -423,31 +513,44 @@ function initialize() {
           		  
           		  if(lastReceivedData!=null){
         	  		  if(!isOnline(friend.nickName)){
+        	  			  if(friend.nickName!=userNickName){
+        	  				  chatMsg[friend.nickName]=[];
+        	  			  }
+        	  			  
         				  var li = document.createElement("li");
         				  li.id = friend.nickName;
         				  li.innerHTML = friend.nickName;
         				  li.style.color = "green";
-        				  li.onclick = findFriend(friend.nickName);
+        				  li.addEventListener("click", function(){
+        					  findFriend(this.id);
+        				  });
         				  $("#friendMenu").append(li);
         				  friendLatlng = new google.maps.LatLng(friend.lat,friend.lng);
-        				  placeMarker(friendLatlng,"User","","",friend.nickName);
+        				  placeMarker(friendLatlng,"User","","",friend.nickName,getUserLogo(friend.nickName)/*friend.logo*/);
         	  		  }
         	  		  checkOfflineFriends(receivedData);
           		  }
           		  else{
+    	  			  if(friend.nickName!=userNickName){
+    	  				  chatMsg[friend.nickName]=[];
+    	  			  }
+          			  
           			  var li = document.createElement("li");
         			  li.id = friend.nickName;
         			  li.innerHTML = friend.nickName;
         			  li.style.color = "green";
-        			  li.onclick = findFriend(friend.nickName);
+        			  li.addEventListener("click", function(){
+    					  findFriend(this.id);
+    				  });
         			  $("#friendMenu").append(li);
         			  friendLatlng = new google.maps.LatLng(friend.lat,friend.lng);
-    				  placeMarker(friendLatlng,"User","","",friend.nickName);
+    				  placeMarker(friendLatlng,"User","","",friend.nickName,getUserLogo(friend.nickName)/*friend.logo*/);
           		  }
           	  }
           	  
           	  lastReceivedData = receivedData;
             }  
+        
         function  checkOfflineFriends(receivedData){
         	var data = JSON.parse(receivedData);
         	//$("#friendMenu").empty();
@@ -490,9 +593,161 @@ function initialize() {
 	  markers=[];
   }
 
+  function parseChatMsg(receiveddata){
+	  var data = JSON.parse(receiveddata);
+	  if(data!=null){
+		  for(var i=0;i<data.length;i++){
+			  var time = data[i].time;
+			  var name = data[i].nickname;
+			  var text = data[i].text;
+			  
+			  if(time>lasttime){
+				  if($("#"+name+"chatBox").length ==0){
+					  var cb = document.createElement('div');
+					  cb.id = name+"chatBox";
+					  
+					  var textarea = document.createElement('textarea');
+					  textarea.id = "text";
+					  textarea.rows = 5;
+					  textarea.cols = 20;
+					  
+					  document.body.appendChild(cb);
+					  $("#"+name+"chatBox").append(textarea);
+					  
+					  var button = document.createElement('button');
+					  button.type = "submit";
+					  
+					  //$("#chatBox"+name).append('<br/><textarea id="text" rows="5" cols="20" ></textarea><br/><button type="submit"></button>');
+					  $("#"+name+"chatBox").append(button);
+				  }
+				  
+				  if($("#"+name+"chatBox").find("#"+name).length !=0){
+					  var li = document.createElement("li");
+		        	  
+		        	  li.innerHTML = name+":"+text;
+		        	  $("#"+name+"chatBox").find("#"+name).append(li);
+				  }
+				  else{
+					  var ul = document.createElement('ul');
+	            	  ul.id=name;
+	            	  $("#"+name+"chatBox").append(ul);
+	            	  //var each = copyMsg.shift();
+	            	  //var name = each[nickname];
+	            	  //var text = each[text];
+	            	  
+	            	  //li.innerHTML = name+":"+text;
+	            	  //$("#chatBox").find("#chattingMsg").append(li);
+	            	  //$("#chatBox").append('<ul id='+name+'></ul>');
+	            	  
+	            	  var li = document.createElement("li");
+		        	  
+		        	  li.innerHTML = name+":"+text;
+		        	  $("#"+name+"chatBox").find("#"+name).append(li);
+				  }
+				  //chatMsg.push(data[i]);
+				  lasttime = time;
+			  }
+		  }
+	  }
+  }
   
   function findFriend(nickname){
-	  
+	  //alert(userNickName);
+	  //alert(nickname);
+	  if(nickname!=userNickName){
+		  if($("#"+nickname+"chatBox").length ==0){
+			  var cb = document.createElement('div');
+			  cb.id = nickname+"chatBox";
+			  //$("#chatBox"+nickname).append('<br/><textarea id="text" rows="5" cols="20" ></textarea><br/><button type="submit"></button>');
+			  var textarea = document.createElement('textarea');
+			  textarea.id = "text";
+			  textarea.rows = 5;
+			  textarea.cols = 20;
+			  
+			  document.body.appendChild(cb);
+			  $("#"+nickname+"chatBox").append(textarea);
+			  
+			  var button = document.createElement('button');
+			  button.type = "submit";
+			  
+			  //$("#chatBox"+name).append('<br/><textarea id="text" rows="5" cols="20" ></textarea><br/><button type="submit"></button>');
+			  $("#"+nickname+"chatBox").append(button);
+		  }
+		  
+	      $( "#"+nickname+"chatBox" ).dialog({
+	          open: function() {
+	              // On open, hide the original submit button
+	              $( this ).find( "[type=submit]" ).hide();
+	              $(".ui-dialog-titlebar-close").hide();
+	              
+	              var copyMsg = chatMsg;
+	              
+	              /*
+	              for(var i=0;i<copyMsg.length;i++){
+	              */
+	              if($("#"+nickname+"chatBox").find("#"+nickname).length ==0){
+	            	  var ul = document.createElement('ul');
+	            	  ul.id=nickname;
+	            	  //var each = copyMsg.shift();
+	            	  //var name = each[nickname];
+	            	  //var text = each[text];
+	            	  
+	            	  //li.innerHTML = name+":"+text;
+	            	  //$("#chatBox").find("#chattingMsg").append(li);
+	            	  $("#"+nickname+"chatBox").append(ul);
+	            	  //$("#chatBox").append('<ul id='+nickname+'></ul>');
+	              }
+	              //}     
+	          },
+	          buttons: [
+	              {
+	                  text: "Submit your Msg",
+	                  click: function(){
+	                  	var text = $("#"+nickname+"chatBox").find("#text").val();
+	                  	date = new Date();
+	                  	time = date.getTime();
+	                  	//chatMsg.push({"time":time,"nickname":userNickName,"text":text});
+	                  	var li = document.createElement("li");
+		            	li.innerHTML = userNickName+":"+text;
+		            	$("#"+nickname+"chatBox").find("#"+nickname).append(li);
+		            	//lasttime = time;
+		            	//$("#chatBox").find("#chattingMsg").append(li);
+	                  	
+		            	var msgSent = {"time":time,"nickname":nickname,"text":text};
+	                  	
+	                  	$(function(){$.ajax({
+	                  		type:'POST',
+	                  		url:'/context/jerseyws/sendmsg',
+	                  		data:JSON.stringify(msgSent),
+	                  		//data:str,
+	                  		contentType: 'application/json; charset=UTF-8',
+	                          success: function(data){
+	                          	//alert("success"+data);
+	                          },
+	                          error: function(){
+	                          	alert("Error Hell");
+	                          }
+	                  	});});
+	                  	
+	                  	//placeMarker(event.latLng,type,title,text,null);
+	                  	
+	                  	//$(this).dialog("close");
+	                  },
+	                  type: "submit",
+	                  //form: "myForm" // <-- Make the association
+	              },
+	              {
+	                  text: "Close",
+	                      click: function() {
+	                    	  //$("#chatBox").find("#"+nickname).empty();
+	                          $( this ).dialog( "close" );
+	                  }
+	              }
+	          ]
+	      });
+	      //$("#chatBox").find("#chattingMsg").empty();
+  
+	  }
   }
   
   function isOnline(nickname){
@@ -506,16 +761,36 @@ function initialize() {
 		}
 		return flag;
   }
-  function getUsers(receivedData){
-  	var data = JSON.parse(receivedData);
-  	usersNicknameJSON = receivedData;
+  function getUserLogo(nickname){
+  	var data = JSON.parse(usersNicknameJSON);
   	
 	  for(var i=0;i<data.length;i++){
-		  var friend = data[i];
-		  //alert(friend.nickName);
+		  if(data[i].nickName == nickname){
+			  return data[i].logo;
+		  }
 	  }
   }
 
+function setLogo(){
+	window.location.href='http://pure-league-728.appspot.com/setlogo.jsp';
+	/*$(function(){$.ajax({
+		type:'GET',
+		async: false,
+		url:'/context/jerseyws/setlogo',
+		//data:JSON.stringify(Msg),
+		//data:str,
+		//contentType: 'application/json; charset=UTF-8',
+        success: function(data){
+        	if(data!='failure'){
+        		window.location.href=data;
+        	}
+        },
+        error: function(){
+        	alert("Error Hell");
+        }
+	});});*/
+}  
+  
 function exit(){
 	var confirmExit = confirm("Are you sure to exit the app?");
 	
@@ -539,6 +814,24 @@ function exit(){
     	
     	//window.location.href='http://arctic-defender-728.appspot.com/login.jsp';
 	}
+}
+
+function getUserNickName(){
+	$(function(){$.ajax({
+		type:'GET',
+		url:'/context/jerseyws/getusername',
+        success: function(data){
+        	if(data!='failure'){
+        		userNickName = data;
+        	}
+        	else{
+        		alert("Please Login in");
+        	}
+        },
+        error: function(){
+        	alert("Error Hell");
+        }
+	});});
 }
 
 google.maps.event.addDomListener(window, 'load', initialize);
