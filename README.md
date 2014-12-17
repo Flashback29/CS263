@@ -36,4 +36,7 @@ Next Goal: receive friends' info (chatting msg,location info etc.) to the friend
 2014/11/30
 Successfully add multi-users login and real-time track other users' login status via the People Nearby Widget
 
-Next Goal: Use the XMPP API to chat with people nearby and use the blubstore API to upload the images
+Next Goal: Use the XMPP API to chat with people nearby and use the blobstore API to upload the images
+
+2014/12/16
+Successfully apply chatting system in the APP. Users could chat with others nearby and could blobstore and imageservice API to upload the user logo in the google map based social network.
